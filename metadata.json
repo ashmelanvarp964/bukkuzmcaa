@@ -1,0 +1,6 @@
+{
+  "name": "BukkuzMC — Premium Minecraft Server Kerala",
+  "description": "Official website for BukkuzMC, Kerala's premier Minecraft Java and Bedrock crossplay server by creator Bukkuz Bruh. Live server stats, creator hub, leaderboards, join guides, and support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
