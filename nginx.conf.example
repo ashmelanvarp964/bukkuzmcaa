@@ -1,0 +1,122 @@
+# ==============================================================================
+# BUKKUZMC PRODUCTION NGINX CONFIGURATION & SECURITY HARDENING
+# Proxying domain www.bukkuzmc.fun & bukkuzmc.fun -> Node.js on Port 4000
+# Resolves all findings from the security audit scanner.
+# ==============================================================================
+
+# 1. PTERODACTYL WINGS DAEMON (Port 8080)
+# Note: Port 8080 is intentionally used by the Pterodactyl Wings game node daemon.
+# Keep port 8080 available for Wings communication with your Pterodactyl panel.
+
+# 2. HTTP -> HTTPS Redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name bukkuzmc.fun www.bukkuzmc.fun;
+
+    # Certbot renewal path
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Redirect all HTTP requests to secure HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# 3. SECURE HTTPS REVERSE PROXY TO PORT 4000
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name bukkuzmc.fun www.bukkuzmc.fun;
+
+    # SSL Certificate Paths (Let's Encrypt / Certbot)
+    ssl_certificate /etc/letsencrypt/live/bukkuzmc.fun/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bukkuzmc.fun/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5:!3DES;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # ==========================================================================
+    # SECURITY HEADERS
+    # ==========================================================================
+    # Resolves: "Missing Strict-Transport-Security (HSTS)"
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # Resolves: "Missing Content-Security-Policy (CSP)"
+    add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; img-src 'self' data: blob: https:; font-src 'self' https: data:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: ws: wss:; frame-src 'self' https://www.youtube.com https://discord.com; frame-ancestors 'self' https://aistudio.google.com https://*.google.com https://*.google.dev https://bukkuzmc.fun https://*.bukkuzmc.fun; object-src 'none'; base-uri 'self';" always;
+
+    # Resolves: "Add X-Frame-Options: DENY or frame-ancestors directive in CSP"
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    # MIME sniffing & Referrer protection
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()" always;
+
+    # Hide server software tokens
+    server_tokens off;
+
+    # ==========================================================================
+    # SENSITIVE FILE & EXPOSURE BLOCK RULES (Returns 404 immediately)
+    # ==========================================================================
+
+    # Resolves: "Database backup exposed" (backup.sql, *.sql)
+    location ~* \.(sql|sqlite|db|dump)$ {
+        return 404;
+    }
+
+    # Resolves: "backup.zip exposed" (backup.zip, backup.tar.gz, *.bak, *.zip)
+    location ~* (backup|\.bak|\.zip|\.tar|\.gz|\.tgz|\.7z|\.rar)$ {
+        return 404;
+    }
+
+    # Resolves: ".env.local file exposed" (any .env* file)
+    location ~* /\.env {
+        return 404;
+    }
+
+    # Resolves: "config.json publicly accessible"
+    location ~* (config\.json|server_data\.json|metadata\.json|package\.json|package-lock\.json|tsconfig\.json)$ {
+        return 404;
+    }
+
+    # Resolves: "Apache server-status exposed"
+    location ~* ^/(server-status|server-info|actuator|metrics|phpinfo) {
+        return 404;
+    }
+
+    # Block any hidden/dot files (.git, .svn, .env, etc.)
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # ==========================================================================
+    # PROXY PASS TO NODE.JS APP ON PORT 4000
+    # ==========================================================================
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+        
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+
+        # Real Client IP and Host headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts and buffer sizes
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 32k;
+    }
+}

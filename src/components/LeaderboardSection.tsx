@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Users, Search, Shield, X, ExternalLink, Wifi } from 'lucide-react';
+import { Users, Search, X } from 'lucide-react';
+import { SeasonId, SEASONS } from '../utils/seasonalTheme.ts';
 
 interface LivePlayer {
   rank?: number;
@@ -12,15 +13,17 @@ interface LeaderboardSectionProps {
   players: LivePlayer[];
   serverVersion?: string;
   serverMotd?: string;
+  seasonId?: SeasonId;
 }
 
 export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
   players,
   serverVersion = 'Paper 1.21.11',
-  serverMotd,
+  seasonId = 'winter',
 }) => {
   const [search, setSearch] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<LivePlayer | null>(null);
+  const season = SEASONS[seasonId] || SEASONS.winter;
 
   const filtered = players.filter((p) =>
     p.username.toLowerCase().includes(search.toLowerCase())
@@ -31,7 +34,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-6 border-b border-white/10">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+          <div className={`text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
             Real-Time Server Query
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
@@ -51,7 +54,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
               placeholder="Search active players..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#0D1115] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-[#0D1115] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
             />
           </div>
         )}
@@ -61,9 +64,12 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
       <div className="bg-[#0C1014] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5 flex-wrap gap-2">
           <div className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: season.colors.accent }}
+            />
             <span className="font-bold text-white">Active Players Online:</span>
-            <span className="font-mono text-emerald-400 font-bold tabular-nums">
+            <span className={`font-mono ${season.classes.textAccent} font-bold tabular-nums`}>
               {players.length}
             </span>
           </div>
@@ -79,7 +85,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
               <div
                 key={player.username}
                 onClick={() => setSelectedPlayer(player)}
-                className="p-4 bg-[#11161C] border border-white/5 hover:border-emerald-500/40 rounded-2xl flex items-center justify-between cursor-pointer transition-all hover:-translate-y-0.5 group"
+                className="p-4 bg-[#11161C] border border-white/5 hover:border-sky-500/40 rounded-2xl flex items-center justify-between cursor-pointer transition-all hover:-translate-y-0.5 group"
               >
                 <div className="flex items-center gap-3">
                   <img
@@ -91,7 +97,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                     }}
                   />
                   <div>
-                    <span className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors block">
+                    <span className="font-bold text-sm text-white group-hover:text-sky-300 transition-colors block">
                       {player.username}
                     </span>
                     <span className="text-[11px] font-mono text-slate-500">
@@ -101,7 +107,14 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                  <span
+                    className="text-[11px] font-mono px-2 py-0.5 rounded border"
+                    style={{
+                      backgroundColor: season.colors.badgeBg,
+                      borderColor: season.colors.badgeBorder,
+                      color: season.colors.accentLight,
+                    }}
+                  >
                     Online
                   </span>
                 </div>
@@ -122,7 +135,10 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
       {/* Real Player 3D Skin Inspector Modal */}
       {selectedPlayer && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0C1014] border border-emerald-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full relative shadow-2xl">
+          <div
+            className="bg-[#0C1014] rounded-3xl p-6 sm:p-8 max-w-md w-full relative shadow-2xl border"
+            style={{ borderColor: season.colors.badgeBorder }}
+          >
             <button
               onClick={() => setSelectedPlayer(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg"
@@ -143,7 +159,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
               </div>
 
               <div>
-                <span className="text-xs font-mono text-emerald-400 block mb-1">
+                <span className={`text-xs font-mono ${season.classes.textAccent} block mb-1`}>
                   Active BukkuzMC Player
                 </span>
                 <h3 className="text-2xl font-black text-white">{selectedPlayer.username}</h3>
@@ -155,7 +171,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
               </div>
 
               <div className="w-full p-3 bg-white/[0.02] border border-white/5 rounded-xl text-xs text-slate-300">
-                Connected to <strong className="text-emerald-400">play.bukkuzmc.fun</strong>
+                Connected to <strong className={season.classes.textAccent}>play.bukkuzmc.fun</strong>
               </div>
             </div>
           </div>

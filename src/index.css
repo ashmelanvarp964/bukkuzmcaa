@@ -34,15 +34,15 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: #38bdf8;
 }
 
-.emerald-glow {
-  box-shadow: 0 0 35px -8px rgba(16, 185, 129, 0.35);
+.theme-glow {
+  box-shadow: 0 0 35px -8px rgba(56, 189, 248, 0.35);
 }
 
-.emerald-glow-sm {
-  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.25);
+.theme-glow-sm {
+  box-shadow: 0 0 15px -3px rgba(56, 189, 248, 0.25);
 }
 
 .obsidian-panel {
@@ -52,10 +52,10 @@
 }
 
 .minecraft-button-shadow {
-  box-shadow: 0 4px 0 #047857;
+  box-shadow: 0 4px 0 #0284c7;
 }
 
 .minecraft-button-shadow:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #047857;
+  box-shadow: 0 2px 0 #0284c7;
 }

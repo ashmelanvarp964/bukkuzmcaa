@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageSquare, Users, Shield, Server, ExternalLink, Globe } from 'lucide-react';
+import { MessageSquare, ExternalLink } from 'lucide-react';
+import { SeasonId, SEASONS } from '../utils/seasonalTheme.ts';
 
 interface CommunityStatsProps {
   communityData: {
@@ -20,22 +21,27 @@ interface CommunityStatsProps {
     location: string;
     crossplay: string;
   };
+  seasonId?: SeasonId;
 }
 
-export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData }) => {
+export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData, seasonId = 'winter' }) => {
   const discordUrl = communityData.discord.inviteUrl || 'https://discord.gg/WVXeaXy2Ux';
   const hostingUrl = communityData.minecraft.hostingWebsite || 'https://lumacloud.xyz';
+  const season = SEASONS[seasonId] || SEASONS.winter;
 
   return (
     <section className="py-16 px-6 max-w-7xl mx-auto">
       <div className="bg-gradient-to-r from-[#0C1116] via-[#0E151A] to-[#0C1116] border border-white/10 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
         {/* Glow backdrop */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[120px] pointer-events-none" />
+        <div
+          className="absolute top-0 right-0 w-96 h-96 blur-[120px] pointer-events-none"
+          style={{ backgroundColor: season.colors.badgeBg }}
+        />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
           {/* Left Column: Heading & Discord Card */}
           <div className="max-w-xl text-center lg:text-left">
-            <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+            <div className={`text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
               Official Community Hub
             </div>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4">
@@ -58,8 +64,11 @@ export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData })
               </a>
 
               <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Community Voice & Text Channels Open</span>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: season.colors.accent }}
+                />
+                <span>Community Voice &amp; Text Channels Open</span>
               </div>
             </div>
           </div>
@@ -76,7 +85,7 @@ export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData })
 
             <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl text-left">
               <span className="text-xs text-slate-400 block mb-1">Max Capacity</span>
-              <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 tabular-nums">
+              <div className={`text-xl sm:text-2xl font-bold font-mono ${season.classes.textAccent} tabular-nums`}>
                 {communityData.minecraft.maxSlots} Slots
               </div>
               <span className="text-[11px] text-slate-500 mt-1 block">Dedicated game slots</span>
@@ -88,7 +97,7 @@ export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData })
                 href={hostingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 hover:text-emerald-300 transition-colors inline-flex items-center gap-1.5"
+                className={`text-xl sm:text-2xl font-bold font-mono ${season.classes.textAccent} hover:brightness-110 transition-colors inline-flex items-center gap-1.5`}
               >
                 <span>LumaCloud</span>
                 <ExternalLink className="w-4 h-4 opacity-75" />
@@ -98,7 +107,7 @@ export const CommunityStats: React.FC<CommunityStatsProps> = ({ communityData })
                   href={hostingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline hover:text-emerald-400"
+                  className={`hover:underline hover:${season.classes.textAccent}`}
                 >
                   lumacloud.xyz
                 </a>

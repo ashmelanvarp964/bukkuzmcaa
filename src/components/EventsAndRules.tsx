@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, Shield, Trophy, Gift, Radio, CheckCircle, ChevronDown, Bell } from 'lucide-react';
+import { Calendar, Shield, Trophy, ChevronDown, Bell } from 'lucide-react';
+import { SeasonId, SEASONS } from '../utils/seasonalTheme.ts';
 
 interface EventItem {
   id: string;
@@ -33,15 +34,18 @@ interface EventsAndRulesProps {
   events: EventItem[];
   announcements: ServerAnnouncement[];
   rules: RuleCategory[];
+  seasonId?: SeasonId;
 }
 
 export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
   events,
   announcements,
   rules,
+  seasonId = 'winter',
 }) => {
   const [selectedRuleCategory, setSelectedRuleCategory] = useState<string>(rules[0]?.category || 'General Behavior');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const season = SEASONS[seasonId] || SEASONS.winter;
 
   const faqs = [
     {
@@ -71,11 +75,11 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
       {/* 1. Announcements & Events Grid */}
       <div>
         <div className="mb-10 pb-6 border-b border-white/10">
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+          <div className={`text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
             Stay Updated
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Announcements & Tournaments
+            Announcements &amp; Tournaments
           </h2>
           <p className="text-sm text-slate-400 mt-1 max-w-xl">
             Official patch notes, scheduled SMP events, BedWars tournaments, and giveaway milestones.
@@ -86,18 +90,25 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
           {/* Announcements Feed (2 columns) */}
           <div className="lg:col-span-2 space-y-4">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-              <Bell className="w-4 h-4 text-emerald-400" />
+              <Bell className={`w-4 h-4 ${season.classes.textAccent}`} />
               <span>Official Announcements</span>
             </h3>
 
             {announcements.map((ann) => (
               <div
                 key={ann.id}
-                className="p-6 rounded-2xl bg-[#0C1014] border border-white/10 hover:border-emerald-500/30 transition-all shadow-lg"
+                className="p-6 rounded-2xl bg-[#0C1014] border border-white/10 hover:border-sky-500/30 transition-all shadow-lg"
               >
                 <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span
+                      className="text-xs font-semibold px-2.5 py-0.5 rounded border"
+                      style={{
+                        backgroundColor: season.colors.badgeBg,
+                        borderColor: season.colors.badgeBorder,
+                        color: season.colors.accentLight,
+                      }}
+                    >
                       {ann.category}
                     </span>
                     {ann.pinned && (
@@ -120,7 +131,7 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
           {/* Events Calendar (1 column) */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-              <Calendar className="w-4 h-4 text-emerald-400" />
+              <Calendar className={`w-4 h-4 ${season.classes.textAccent}`} />
               <span>Upcoming Events</span>
             </h3>
 
@@ -128,10 +139,12 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
               {events.map((evt) => (
                 <div
                   key={evt.id}
-                  className="p-5 rounded-2xl bg-[#0E1318] border border-white/10 hover:border-emerald-500/30 transition-all"
+                  className="p-5 rounded-2xl bg-[#0E1318] border border-white/10 hover:border-sky-500/30 transition-all"
                 >
                   <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-mono">
-                    <span className="text-emerald-400 font-bold uppercase">{evt.type.replace('_', ' ')}</span>
+                    <span className={`${season.classes.textAccent} font-bold uppercase`}>
+                      {evt.type.replace('_', ' ')}
+                    </span>
                     <span>{evt.date} · {evt.time}</span>
                   </div>
 
@@ -139,8 +152,15 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
                   <p className="text-xs text-slate-300 leading-relaxed mb-3">{evt.description}</p>
 
                   {evt.prizePool && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-xs font-mono text-emerald-300">
-                      <Trophy className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <div
+                      className="flex items-center gap-2 p-2 rounded-lg border text-xs font-mono"
+                      style={{
+                        backgroundColor: season.colors.badgeBg,
+                        borderColor: season.colors.badgeBorder,
+                        color: season.colors.accentLight,
+                      }}
+                    >
+                      <Trophy className="w-3.5 h-3.5 shrink-0" />
                       <span>{evt.prizePool}</span>
                     </div>
                   )}
@@ -154,11 +174,11 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
       {/* 2. Server Rules Section */}
       <div>
         <div className="mb-10 pb-6 border-b border-white/10">
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+          <div className={`text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
             Community Guidelines
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Server Rules & Fair Play
+            Server Rules &amp; Fair Play
           </h2>
           <p className="text-sm text-slate-400 mt-1 max-w-xl">
             Enforced by staff and automated anti-cheat systems to maintain a friendly, competitive environment for all players.
@@ -168,26 +188,34 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Rule Category Selector */}
           <div className="space-y-2">
-            {rules.map((rc) => (
-              <button
-                key={rc.category}
-                onClick={() => setSelectedRuleCategory(rc.category)}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-between ${
-                  selectedRuleCategory === rc.category
-                    ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20 font-bold'
-                    : 'bg-[#0C1014] text-slate-300 hover:text-white hover:bg-white/5 border border-white/5'
-                }`}
-              >
-                <span>{rc.category}</span>
-                <Shield className="w-3.5 h-3.5" />
-              </button>
-            ))}
+            {rules.map((rc) => {
+              const isSelected = selectedRuleCategory === rc.category;
+              return (
+                <button
+                  key={rc.category}
+                  onClick={() => setSelectedRuleCategory(rc.category)}
+                  style={{
+                    backgroundColor: isSelected ? season.colors.accent : undefined,
+                    color: isSelected ? '#000000' : undefined,
+                    boxShadow: isSelected ? `0 4px 14px -2px ${season.colors.glow}` : undefined,
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-xs transition-all flex items-center justify-between ${
+                    isSelected
+                      ? 'font-bold'
+                      : 'bg-[#0C1014] text-slate-300 hover:text-white hover:bg-white/5 border border-white/5 font-semibold'
+                  }`}
+                >
+                  <span>{rc.category}</span>
+                  <Shield className="w-3.5 h-3.5" />
+                </button>
+              );
+            })}
           </div>
 
           {/* Active Rules List */}
           <div className="md:col-span-2 bg-[#0C1014] border border-white/10 rounded-2xl p-6 sm:p-8">
             <h4 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-emerald-400" />
+              <Shield className={`w-5 h-5 ${season.classes.textAccent}`} />
               <span>{selectedRuleCategory}</span>
             </h4>
 
@@ -199,7 +227,13 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
                     key={index}
                     className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3 text-xs sm:text-sm text-slate-200"
                   >
-                    <span className="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <span
+                      className="w-5 h-5 rounded-md font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5"
+                      style={{
+                        backgroundColor: season.colors.badgeBg,
+                        color: season.colors.accentLight,
+                      }}
+                    >
                       {index + 1}
                     </span>
                     <span className="leading-relaxed">{ruleText}</span>
@@ -213,7 +247,7 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
       {/* 3. Frequently Asked Questions Accordion */}
       <div>
         <div className="mb-10 pb-6 border-b border-white/10">
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+          <div className={`text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
             Common Questions
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
@@ -227,13 +261,13 @@ export const EventsAndRules: React.FC<EventsAndRulesProps> = ({
             return (
               <div
                 key={index}
-                className="bg-[#0C1014] border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-emerald-500/30 transition-all"
+                className="bg-[#0C1014] border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-sky-500/30 transition-all"
                 onClick={() => setOpenFaqIndex(isOpen ? null : index)}
               >
                 <div className="flex items-center justify-between gap-4">
                   <h5 className="font-bold text-sm text-white">{faq.q}</h5>
                   <ChevronDown
-                    className={`w-4 h-4 text-emerald-400 shrink-0 transition-transform ${
+                    className={`w-4 h-4 ${season.classes.textAccent} shrink-0 transition-transform ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />

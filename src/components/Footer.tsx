@@ -1,28 +1,28 @@
 import React from 'react';
-import { Youtube, MessageSquare, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Youtube, MessageSquare } from 'lucide-react';
 
 interface FooterProps {
   reducedMotion: boolean;
   onToggleReducedMotion: () => void;
-  onOpenAdmin: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   reducedMotion,
   onToggleReducedMotion,
-  onOpenAdmin,
 }) => {
   return (
     <footer className="w-full bg-[#06080A] border-t border-white/10 text-slate-400 py-12 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-xs">
         {/* Brand & Creator Attribution */}
         <div className="text-center md:text-left">
-          <div className="text-base font-bold text-white mb-1 flex items-center justify-center md:justify-start gap-2">
-            <span className="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono font-black">
-              B
-            </span>
-            <span>BukkuzMC</span>
-            <span className="text-[11px] text-amber-400 font-normal">· Owner: Bukkuz Bruh</span>
+          <div className="text-base font-bold text-white mb-1 flex items-center justify-center md:justify-start gap-2.5">
+            <img
+              src="/assets/aistudio/file_00000000aae08211b48a3aad0c5b4b07_f1b87ff8.png"
+              alt="Bukkuz SMP Logo"
+              className="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+            />
+            <span>BUKKUZ <span className="text-sky-400">SMP</span></span>
+            <span className="text-[11px] text-sky-300 font-normal">· Owner: Bukkuz Bruh</span>
             <span className="text-[11px] text-cyan-400 font-normal">· Developer: ICONIC OP</span>
           </div>
           <p className="text-slate-400 max-w-md">
@@ -40,18 +40,18 @@ export const Footer: React.FC<FooterProps> = ({
               href="https://www.youtube.com/@real_bukkuz"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-400 hover:underline font-semibold"
+              className="text-sky-400 hover:underline font-semibold"
             >
-              @real_bukkuz (Minecraft & All Games)
+              @real_bukkuz (Minecraft &amp; All Games)
             </a>
-            . Server engineered by Lead Developer & Manager{' '}
+            . Server engineered by Lead Developer &amp; Manager{' '}
             <a
               href="https://www.youtube.com/@ft.iconicmc"
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-400 hover:underline font-semibold"
             >
-              ICONIC OP
+              ICONIC OP (1.04K+ Subs)
             </a>
             .
           </p>
@@ -61,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({
               href="https://lumacloud.xyz"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-400 hover:underline font-mono"
+              className="text-sky-400 hover:underline font-mono"
             >
               LumaCloud (lumacloud.xyz)
             </a>
@@ -71,31 +71,24 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Quick Nav Links */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-slate-300">
-          <a href="#overview" className="hover:text-emerald-400 transition-colors">
+          <a href="#overview" className="hover:text-sky-400 transition-colors">
             Overview
           </a>
-          <a href="#status" className="hover:text-emerald-400 transition-colors">
+          <a href="#status" className="hover:text-sky-400 transition-colors">
             Server Status
           </a>
-          <a href="#creator" className="hover:text-emerald-400 transition-colors">
+          <a href="#creator" className="hover:text-sky-400 transition-colors">
             Creator Hub
           </a>
-          <a href="#leaderboards" className="hover:text-emerald-400 transition-colors">
+          <a href="#leaderboards" className="hover:text-sky-400 transition-colors">
             Live Players
           </a>
-          <a href="#join" className="hover:text-emerald-400 transition-colors">
+          <a href="#join" className="hover:text-sky-400 transition-colors">
             Join Guide
           </a>
-          <a href="#support" className="hover:text-emerald-400 transition-colors">
-            Support
+          <a href="#support" className="hover:text-sky-400 transition-colors">
+            Discord Tickets
           </a>
-          <button
-            onClick={onOpenAdmin}
-            className="hover:text-emerald-400 transition-colors flex items-center gap-1"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Staff Portal</span>
-          </button>
         </div>
 
         {/* Social Links & Accessibility */}
@@ -131,7 +124,7 @@ export const Footer: React.FC<FooterProps> = ({
             href="https://www.youtube.com/@real_bukkuz"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-lg bg-white/5 hover:bg-emerald-600/20 hover:text-emerald-400 text-slate-400 transition-colors font-mono text-xs font-bold"
+            className="p-2 rounded-lg bg-white/5 hover:bg-sky-600/20 hover:text-sky-400 text-slate-400 transition-colors font-mono text-xs font-bold"
             title="Real Bukkuz (Minecraft & All Games)"
           >
             2

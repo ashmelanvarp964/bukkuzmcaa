@@ -1,141 +1,86 @@
 import React, { useState } from 'react';
-import { LifeBuoy, AlertCircle, CheckCircle2, MessageSquare, Send, Search, Clock, ShieldAlert } from 'lucide-react';
+import { MessageSquare, ExternalLink, ShieldAlert, Bug, UserX, HelpCircle, Check, Copy, ArrowRight, ShieldCheck } from 'lucide-react';
+import { SeasonId, SEASONS } from '../utils/seasonalTheme.ts';
 
-interface SupportTicket {
-  id: string;
-  type: 'bug' | 'player' | 'appeal' | 'general';
-  ign: string;
-  discord: string;
-  subject: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  evidenceUrl?: string;
-  status: 'open' | 'investigating' | 'resolved' | 'closed';
-  createdAt: string;
-  adminNotes?: string;
-  replies: Array<{
-    author: string;
-    message: string;
-    timestamp: string;
-    isAdmin: boolean;
-  }>;
+interface SupportCenterProps {
+  seasonId?: SeasonId;
 }
 
-export const SupportCenter: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'create' | 'lookup'>('create');
+export const SupportCenter: React.FC<SupportCenterProps> = ({ seasonId = 'winter' }) => {
+  const [selectedCategory, setSelectedCategory] = useState<'bug' | 'player' | 'appeal' | 'general'>('bug');
+  const [copiedTemplate, setCopiedTemplate] = useState(false);
+  const season = SEASONS[seasonId] || SEASONS.winter;
 
-  // Form states
-  const [type, setType] = useState<'bug' | 'player' | 'appeal' | 'general'>('bug');
-  const [ign, setIgn] = useState('');
-  const [discord, setDiscord] = useState('');
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
-  const [evidenceUrl, setEvidenceUrl] = useState('');
+  const DISCORD_URL = 'https://discord.gg/WVXeaXy2Ux';
 
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [createdTicket, setCreatedTicket] = useState<SupportTicket | null>(null);
+  const ticketCategories = [
+    {
+      id: 'bug',
+      title: 'Bug & Glitch Reports',
+      icon: Bug,
+      color: 'text-amber-400',
+      bgColor: 'bg-amber-500/10 border-amber-500/30',
+      description: 'Report in-game anomalies, plugin errors, redstone issues, or economy discrepancies.',
+      template: `[BUG REPORT - BukkuzMC]
+Minecraft IGN: 
+Edition: [Java / Bedrock]
+Version: 
+Coordinates / Location: 
+Bug Description: 
+Evidence/Screenshot URL: `,
+      instructions: 'Head to #tickets on Discord and click "Create Bug Ticket" to talk directly with our development staff.',
+    },
+    {
+      id: 'player',
+      title: 'Player & Griefing Reports',
+      icon: ShieldAlert,
+      color: 'text-red-400',
+      bgColor: 'bg-red-500/10 border-red-500/30',
+      description: 'Report hackers, X-Ray users, combat loggers, foul language, or base griefing in survival areas.',
+      template: `[PLAYER REPORT - BukkuzMC]
+Your IGN: 
+Reported Player IGN: 
+Infraction Type: [Hacking / Griefing / Toxicity / RMT]
+Approximate Time (IST): 
+Coordinates: 
+Video/Screenshot Proof: `,
+      instructions: 'Submit your evidence in a private Discord ticket. All reports are confidential and handled by Senior Moderators.',
+    },
+    {
+      id: 'appeal',
+      title: 'Ban & Mute Appeals',
+      icon: UserX,
+      color: 'text-rose-400',
+      bgColor: 'bg-rose-500/10 border-rose-500/30',
+      description: 'Submit an appeal if you believe your account was falsely flagged, banned, or muted.',
+      template: `[BAN APPEAL - BukkuzMC]
+Minecraft IGN: 
+Discord Username: 
+Reason for Ban/Mute: 
+Banning Staff Member: 
+Why should you be unbanned?: `,
+      instructions: 'Be honest and thorough in your appeal. Moderator decisions are reviewed by Owner Bukkuz Bruh & Manager ICONIC OP.',
+    },
+    {
+      id: 'general',
+      title: 'General Inquiries & Help',
+      icon: HelpCircle,
+      color: season.classes.textAccent,
+      bgColor: 'bg-sky-500/10 border-sky-500/30',
+      description: 'Questions regarding Bedrock crossplay ports, rank perks, events, or creator stream schedules.',
+      template: `[GENERAL INQUIRY - BukkuzMC]
+IGN: 
+Query / Question: `,
+      instructions: 'Our community helpers and staff are available 24/7 on Discord to answer questions in English and Malayalam.',
+    },
+  ];
 
-  // Lookup state
-  const [lookupId, setLookupId] = useState('');
-  const [lookingUp, setLookingUp] = useState(false);
-  const [lookupError, setLookupError] = useState<string | null>(null);
-  const [viewedTicket, setViewedTicket] = useState<SupportTicket | null>(null);
+  const currentCategory = ticketCategories.find((c) => c.id === selectedCategory) || ticketCategories[0];
 
-  // Reply state
-  const [replyText, setReplyText] = useState('');
-  const [replying, setReplying] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError(null);
-
-    if (!ign.trim() || !subject.trim() || !description.trim()) {
-      setSubmitError('Please fill in your In-Game Name, Subject, and Description.');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/support/ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          ign,
-          discord,
-          subject,
-          description,
-          priority,
-          evidenceUrl,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit ticket');
-      }
-
-      setCreatedTicket(data.ticket);
-      // Reset form
-      setIgn('');
-      setDiscord('');
-      setSubject('');
-      setDescription('');
-      setEvidenceUrl('');
-    } catch (err: any) {
-      setSubmitError(err.message || 'Error communicating with support API');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!lookupId.trim()) return;
-
-    setLookingUp(true);
-    setLookupError(null);
-    setViewedTicket(null);
-
-    try {
-      const res = await fetch(`/api/support/ticket/${encodeURIComponent(lookupId.trim())}`);
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Ticket not found');
-      }
-      setViewedTicket(data.ticket);
-    } catch (err: any) {
-      setLookupError(err.message || 'Failed to lookup ticket');
-    } finally {
-      setLookingUp(false);
-    }
-  };
-
-  const handleSendReply = async () => {
-    if (!viewedTicket || !replyText.trim()) return;
-    setReplying(true);
-    try {
-      const res = await fetch(`/api/support/ticket/${viewedTicket.id}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          author: viewedTicket.ign,
-          message: replyText.trim(),
-          isAdmin: false,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.ticket) {
-        setViewedTicket(data.ticket);
-        setReplyText('');
-      }
-    } catch {
-      // Ignore
-    } finally {
-      setReplying(false);
-    }
+  const handleCopyTemplate = () => {
+    navigator.clipboard.writeText(currentCategory.template);
+    setCopiedTemplate(true);
+    setTimeout(() => setCopiedTemplate(false), 2200);
   };
 
   return (
@@ -143,324 +88,231 @@ export const SupportCenter: React.FC = () => {
       {/* Header */}
       <div className="mb-10 pb-6 border-b border-white/10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
-            Player Assistance & Appeals
+          <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${season.classes.textAccent} mb-2`}>
+            <ShieldCheck className="w-4 h-4" />
+            <span>Community Assistance &amp; Ticket System</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Support Center
+            Official Discord Ticket Center
           </h2>
-          <p className="text-sm text-slate-400 mt-1 max-w-xl">
-            Submit bug reports, griefing reports, ban appeals, or general inquiries directly to our staff team.
+          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+            To ensure zero latency, real-time push alerts, and direct interaction with Server Owner <strong className="text-white">Bukkuz Bruh</strong> and Developer <strong className="text-white">ICONIC OP</strong>, all player support and tickets are processed through our official Discord.
           </p>
         </div>
 
-        {/* Mode Switcher */}
-        <div className="flex items-center gap-2 p-1 bg-black/40 rounded-xl border border-white/5">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-              activeTab === 'create'
-                ? 'bg-emerald-500 text-black shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Submit Ticket
-          </button>
-          <button
-            onClick={() => setActiveTab('lookup')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-              activeTab === 'lookup'
-                ? 'bg-emerald-500 text-black shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Track Existing Ticket
-          </button>
-        </div>
+        {/* Discord Primary CTA */}
+        <a
+          href={DISCORD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs shadow-lg shadow-[#5865F2]/25 transition-all active:scale-95 whitespace-nowrap self-start md:self-auto"
+        >
+          <MessageSquare className="w-4 h-4 fill-white" />
+          <span>Open Ticket in Discord</span>
+          <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
+        </a>
       </div>
 
-      {activeTab === 'create' ? (
-        <div className="bg-[#0C1014] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl max-w-3xl mx-auto">
-          {createdTicket ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">Ticket Submitted Successfully</h3>
-              <p className="text-xs text-slate-300 max-w-md mx-auto">
-                Your ticket has been logged into the BukkuzMC queue. Keep your reference ID safe to track responses from our moderators.
-              </p>
-              <div className="p-4 bg-white/[0.03] border border-emerald-500/30 rounded-xl inline-block font-mono text-lg font-bold text-emerald-400 select-all">
-                {createdTicket.id}
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    setViewedTicket(createdTicket);
-                    setLookupId(createdTicket.id);
-                    setActiveTab('lookup');
-                    setCreatedTicket(null);
+      {/* Main Ticket Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left: Category Selector Cards */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+            Select Ticket Category
+          </div>
+
+          {ticketCategories.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id as any)}
+                style={{
+                  borderColor: isSelected ? season.colors.badgeBorder : undefined,
+                  boxShadow: isSelected ? `0 10px 15px -3px ${season.colors.glow}` : undefined,
+                }}
+                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-4 ${
+                  isSelected
+                    ? 'bg-[#10161D]'
+                    : 'bg-[#0B0E12] border-white/5 hover:border-white/20 text-slate-400 hover:text-white'
+                }`}
+              >
+                <div
+                  className="p-2.5 rounded-xl shrink-0"
+                  style={{
+                    backgroundColor: isSelected ? season.colors.badgeBg : 'rgba(255, 255, 255, 0.05)',
+                    color: isSelected ? season.colors.accentLight : '#94a3b8',
                   }}
-                  className="px-5 py-2.5 bg-emerald-500 text-black text-xs font-bold rounded-xl shadow-md hover:bg-emerald-400 transition-colors"
                 >
-                  View Ticket Status Now
-                </button>
-              </div>
+                  <Icon className="w-5 h-5" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h3 className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      {cat.title}
+                    </h3>
+                    {isSelected && (
+                      <span
+                        className="text-[10px] font-mono font-bold px-2 py-0.5 rounded border"
+                        style={{
+                          backgroundColor: season.colors.badgeBg,
+                          borderColor: season.colors.badgeBorder,
+                          color: season.colors.accentLight,
+                        }}
+                      >
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                    {cat.description}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+
+          {/* Discord Notice Box */}
+          <div className="p-4 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/30 text-xs text-slate-300">
+            <div className="flex items-center gap-2 font-bold text-white mb-1">
+              <MessageSquare className="w-4 h-4 text-[#5865F2]" />
+              <span>discord.gg/WVXeaXy2Ux</span>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {submitError && (
-                <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                  <span>{submitError}</span>
-                </div>
-              )}
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Ticket bot auto-creates a private channel visible only to you, Bukkuz Bruh, and server admins. Typical response time is under 15 minutes.
+            </p>
+          </div>
+        </div>
 
-              {/* Category selector */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">Ticket Category</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(['bug', 'player', 'appeal', 'general'] as const).map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setType(cat)}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold capitalize border transition-all ${
-                        type === cat
-                          ? 'bg-emerald-500 text-black border-emerald-400 shadow-sm'
-                          : 'bg-white/[0.02] text-slate-400 border-white/5 hover:text-white'
-                      }`}
-                    >
-                      {cat === 'bug' && 'Bug Report'}
-                      {cat === 'player' && 'Player Report'}
-                      {cat === 'appeal' && 'Ban Appeal'}
-                      {cat === 'general' && 'General Help'}
-                    </button>
-                  ))}
+        {/* Right: Ticket Template & Redirect Launcher */}
+        <div className="lg:col-span-7 bg-[#0C1014] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6 flex-wrap gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl ${currentCategory.bgColor}`}>
+                  <currentCategory.icon className={`w-5 h-5 ${currentCategory.color}`} />
                 </div>
-              </div>
-
-              {/* In-Game Name & Discord */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Minecraft In-Game Name (IGN) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Bukkuz_Fan99"
-                    value={ign}
-                    onChange={(e) => setIgn(e.target.value)}
-                    className="w-full bg-[#11161B] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  />
+                  <h3 className="text-lg font-bold text-white">{currentCategory.title}</h3>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Instant routing to #tickets channel
+                  </span>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Discord Username (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. player#0001 or @handle"
-                    value={discord}
-                    onChange={(e) => setDiscord(e.target.value)}
-                    className="w-full bg-[#11161B] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-
-              {/* Subject & Priority */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Subject *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Brief summary of the issue"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="w-full bg-[#11161B] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Priority</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as any)}
-                    className="w-full bg-[#11161B] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Detailed Description *</label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="Explain what occurred, timestamps, coordinates, or player names involved..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#11161B] border border-white/10 rounded-xl p-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 leading-relaxed"
-                />
-              </div>
-
-              {/* Evidence URL */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Evidence Link (Imgur, YouTube clip, or screenshot link)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://imgur.com/..."
-                  value={evidenceUrl}
-                  onChange={(e) => setEvidenceUrl(e.target.value)}
-                  className="w-full bg-[#11161B] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
               </div>
 
               <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={handleCopyTemplate}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-slate-200 hover:text-white transition-all"
+                title="Copy formatted template to clipboard"
               >
-                <Send className="w-4 h-4" />
-                <span>{submitting ? 'Submitting to Queue...' : 'Submit Support Ticket'}</span>
+                {copiedTemplate ? (
+                  <>
+                    <Check className={`w-3.5 h-3.5 ${season.classes.textAccent}`} />
+                    <span className={season.classes.textAccent}>Template Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Copy Template</span>
+                  </>
+                )}
               </button>
-            </form>
-          )}
-        </div>
-      ) : (
-        /* Lookup view */
-        <div className="bg-[#0C1014] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl max-w-3xl mx-auto space-y-6">
-          <form onSubmit={handleLookup} className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Enter Ticket ID (e.g. BKZ-8821)"
-                value={lookupId}
-                onChange={(e) => setLookupId(e.target.value)}
-                className="w-full bg-[#11161B] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500 uppercase"
-              />
             </div>
-            <button
-              type="submit"
-              disabled={lookingUp}
-              className="px-5 py-2.5 bg-emerald-500 text-black font-semibold text-xs rounded-xl hover:bg-emerald-400 transition-colors disabled:opacity-50"
-            >
-              {lookingUp ? 'Searching...' : 'Search'}
-            </button>
-          </form>
 
-          {lookupError && (
-            <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-rose-200 text-xs">
-              {lookupError}
-            </div>
-          )}
+            {/* Step-by-Step Dispatch flow */}
+            <div className="space-y-4 mb-6">
+              <div className="text-xs font-medium text-slate-300">How to open your ticket:</div>
 
-          {viewedTicket && (
-            <div className="space-y-6 border-t border-white/10 pt-6">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <span className="font-mono text-sm font-bold text-emerald-400 block">
-                    {viewedTicket.id}
-                  </span>
-                  <h4 className="text-base font-bold text-white mt-1">{viewedTicket.subject}</h4>
-                </div>
-                <span
-                  className={`text-xs font-bold uppercase px-2.5 py-1 rounded-md ${
-                    viewedTicket.status === 'resolved'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : viewedTicket.status === 'investigating'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                  }`}
-                >
-                  {viewedTicket.status}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg">
-                  <span className="text-slate-500 block text-[10px]">Player</span>
-                  <span className="text-white">{viewedTicket.ign}</span>
-                </div>
-                <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg">
-                  <span className="text-slate-500 block text-[10px]">Category</span>
-                  <span className="text-emerald-400 uppercase">{viewedTicket.type}</span>
-                </div>
-                <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg">
-                  <span className="text-slate-500 block text-[10px]">Priority</span>
-                  <span className="text-white capitalize">{viewedTicket.priority}</span>
-                </div>
-                <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg">
-                  <span className="text-slate-500 block text-[10px]">Submitted</span>
-                  <span className="text-slate-300">{new Date(viewedTicket.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {viewedTicket.description}
-              </div>
-
-              {/* Conversation History */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Staff Responses & Updates
-                </h5>
-                <div className="space-y-2">
-                  {viewedTicket.replies?.map((rep, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3.5 rounded-xl text-xs border ${
-                        rep.isAdmin
-                          ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-200'
-                          : 'bg-white/[0.02] border-white/5 text-slate-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5 font-mono text-[11px]">
-                        <span className="font-bold text-white">{rep.author}</span>
-                        <span className="text-slate-400">
-                          {new Date(rep.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="leading-relaxed">{rep.message}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Add Follow-up message */}
-              <div className="pt-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add follow-up information for staff..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    className="flex-1 bg-[#11161B] border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                  />
-                  <button
-                    onClick={handleSendReply}
-                    disabled={replying || !replyText.trim()}
-                    className="px-4 py-2 bg-emerald-500 text-black text-xs font-bold rounded-xl hover:bg-emerald-400 transition-colors disabled:opacity-50"
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center font-mono font-bold text-[10px] mb-2"
+                    style={{
+                      backgroundColor: season.colors.badgeBg,
+                      color: season.colors.accentLight,
+                    }}
                   >
-                    Send
-                  </button>
+                    1
+                  </div>
+                  <div className="font-semibold text-white mb-0.5">Copy Template</div>
+                  <div className="text-slate-400 text-[11px]">Copy the pre-structured info box below.</div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center font-mono font-bold text-[10px] mb-2"
+                    style={{
+                      backgroundColor: season.colors.badgeBg,
+                      color: season.colors.accentLight,
+                    }}
+                  >
+                    2
+                  </div>
+                  <div className="font-semibold text-white mb-0.5">Join Discord</div>
+                  <div className="text-slate-400 text-[11px]">Click button below to open BukkuzMC Discord.</div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center font-mono font-bold text-[10px] mb-2"
+                    style={{
+                      backgroundColor: season.colors.badgeBg,
+                      color: season.colors.accentLight,
+                    }}
+                  >
+                    3
+                  </div>
+                  <div className="font-semibold text-white mb-0.5">Staff Handles It</div>
+                  <div className="text-slate-400 text-[11px]">Paste in #tickets to notify online moderators.</div>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* Template Preview Box */}
+            <div>
+              <label className="block text-xs font-mono text-slate-400 mb-2">
+                Ticket Format (Pre-Filled for {currentCategory.title}):
+              </label>
+              <pre className="bg-[#050709] border border-white/5 rounded-2xl p-4 text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed select-all">
+                {currentCategory.template}
+              </pre>
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div className="pt-6 mt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-xs text-slate-400 flex items-center gap-1.5">
+              <span>Direct Link:</span>
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${season.classes.textAccent} hover:underline font-mono font-semibold`}
+              >
+                discord.gg/WVXeaXy2Ux
+              </a>
+            </span>
+
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: season.colors.accent,
+                boxShadow: `0 4px 14px -2px ${season.colors.glow}`,
+              }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 hover:brightness-110 text-black font-bold text-xs rounded-xl transition-all active:scale-95"
+            >
+              <MessageSquare className="w-4 h-4 fill-black" />
+              <span>Proceed to Discord Tickets</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 };
