@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import net from 'net';
 import dotenv from 'dotenv';
@@ -1098,16 +1099,18 @@ app.all('/api/support/ticket*', (req: Request, res: Response) => {
 // SERVER INITIALIZATION (DEV & PROD)
 // ==========================================
 async function startServer() {
-  const isProd = process.env.NODE_ENV === 'production';
+  const distPath = path.resolve(__dirname, 'dist');
+  const hasDist = fs.existsSync(path.resolve(distPath, 'index.html'));
+  const isProd = process.env.NODE_ENV === 'production' || (process.env.NODE_ENV !== 'development' && hasDist);
+
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
